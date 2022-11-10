@@ -1,5 +1,5 @@
 org: foobardude
-app: test-http
+app: alexa-dynamo-serverless
 service: test-http
 frameworkVersion: "3"
 
@@ -15,38 +15,43 @@ provider:
         - arn:aws:dynamodb:us-east-1:304560344138:table/TaskTable
 
 functions:
+  mediciPatient:
+    handler: lambda/custom/index.handler
+    events:
+      - alexaSkill: amzn1.ask.skill.611b5779-0ece-4f49-9329-13033a19664e
+
   hello:
-    handler: src/hello.hello
+    handler: lambda/custom/hello.hello
     events:
       - httpApi:
           path: /
           method: get
   createTask:
-    handler: src/addTask.addTask
+    handler: lambda/custom/addTask.addTask
     events:
       - httpApi:
           path: /tasks
           method: post
   getTasks:
-    handler: src/getTasks.getTasks
+    handler: lambda/custom/getTasks.getTasks
     events:
       - httpApi:
           path: /tasks
           method: get
   getTask:
-    handler: src/getTask.getTask
+    handler: lambda/custom/getTask.getTask
     events:
       - httpApi:
           path: /tasks/{id}
           method: get
   updateTask:
-    handler: src/updateTask.updateTask
+    handler: lambda/custom/updateTask.updateTask
     events:
       - httpApi:
           path: /tasks/{id}
           method: put
   deleteTask:
-    handler: src/deleteTask.deleteTask
+    handler: lambda/custom/deleteTask.deleteTask
     events:
       - httpApi:
           path: /tasks/{id}
@@ -57,11 +62,13 @@ resources:
     TaskTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: TaskTable
+        TableName: dynamodb-starter
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: userId
             KeyType: HASH
+          - AttributeName: movieTitle
+            KeyType: RANGE
