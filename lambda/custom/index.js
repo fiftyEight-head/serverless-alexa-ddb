@@ -3,15 +3,26 @@
 
 const Alexa = require('ask-sdk');
 const dbHelper = require('./helpers/dbHelper');
-const GENERAL_REPROMPT = "What would you like to do?";
+
+
+
+
+
+const GENERAL_REPROMPT = "Que quieres hacer?";
 const dynamoDBTableName = "dynamodb-starter";
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
   handle(handlerInput) {
-    const speechText = 'Hello there. What is your favourite movie? You can say add moviename to add your favourite movie or say list my movies to get your favourite movies.';
-    const repromptText = 'What would you like to do? You can say HELP to get available options';
+    let userId = handlerInput.requestEnvelope.context.System.user.userId;
+    // let person = handlerInput.requestEnvelope.ccontext.System.person;
+    // let personId = person.personId;
+
+console.log('LOG userId: ', userId/* , "LOG PERSON: ", person, "LOG PERSON ID: ", personId */);
+
+    const speechText = 'Que precisas hacer? Puedes pedirme que te recuerde tu tratamiento médico o que te diga que medicamentos débes tomar.';
+    const repromptText = 'Como puedo ayudar? Si precisas ayuda puedes decir AYUDA';
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -73,9 +84,9 @@ const GetMoviesIntentHandler = {
     const userID = handlerInput.requestEnvelope.context.System.user.userId; 
     return dbHelper.getMovies(userID)
       .then((data) => {
-        var speechText = "Your movies are "
+        var speechText = "La receta dice "
         if (data.length == 0) {
-          speechText = "You do not have any favourite movie yet, add movie by saving add moviename "
+          speechText = "Aún no tienes ningun tratamiento o medicamento recetado "
         } else {
           speechText += data.map(e => e.movieTitle).join(", ")
         }
@@ -85,7 +96,7 @@ const GetMoviesIntentHandler = {
           .getResponse();
       })
       .catch((err) => {
-        const speechText = "we cannot get your movie right now. Try again!"
+        const speechText = "No puedo recordarlo ahora. Intentalo mas tarde!"
         return responseBuilder
           .speak(speechText)
           .getResponse();
@@ -142,7 +153,7 @@ const HelpIntentHandler = {
       && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
   },
   handle(handlerInput) {
-    const speechText = 'You can introduce yourself by telling me your name';
+    const speechText = 'Puedes presentarte diciendome tu nombre';
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -158,7 +169,7 @@ const CancelAndStopIntentHandler = {
         || handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
   },
   handle(handlerInput) {
-    const speechText = 'Goodbye!';
+    const speechText = 'Estoy para servirte';
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -166,14 +177,29 @@ const CancelAndStopIntentHandler = {
   },
 };
 
+const GoodByeRequestHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+    && (handlerInput.requestEnvelope.request.intent.name === 'GoodByeIntent')
+  },
+  handle(handlerInput) {
+    const speechText = 'Estoy para servirte. Hasta luego!.'; 
+    return handlerInput.responseBuilder
+    .speak(speechText)
+    .getResponse();    
+  }
+}
+
 const SessionEndedRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
   },
   handle(handlerInput) {
     console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
-
-    return handlerInput.responseBuilder.getResponse();
+    const speechText = 'Hasta Luego!.'
+    return handlerInput.responseBuilder
+    .speak(speechText)
+    .getResponse();
   },
 };
 
@@ -185,8 +211,8 @@ const ErrorHandler = {
     console.log(`Error handled: ${error.message}`);
 
     return handlerInput.responseBuilder
-      .speak('Sorry, I can\'t understand the command. Please say again.')
-      .reprompt('Sorry, I can\'t understand the command. Please say again.')
+      .speak('Disculpas, No entiendo ese comando. Por favor prueba de nuevo.')
+      .reprompt('Perdon, No puedo entender ese comando. Por favor intentalo de nuevo.')
       .getResponse();
   },
 };
@@ -203,6 +229,7 @@ exports.handler = skillBuilder
     RemoveMovieIntentHandler,
     HelpIntentHandler,
     CancelAndStopIntentHandler,
+    GoodByeRequestHandler,
     SessionEndedRequestHandler
   )
   .addErrorHandlers(ErrorHandler)

@@ -1,6 +1,6 @@
 org: foobardude
 app: alexa-dynamo-serverless
-service: test-http
+service: test-alexa
 frameworkVersion: "3"
 
 provider:
@@ -12,13 +12,16 @@ provider:
       Action:
         - dynamodb:*
       Resource:
-        - arn:aws:dynamodb:us-east-1:304560344138:table/TaskTable
+        - arn:aws:dynamodb:us-east-1:304560344138:table/movieTitle
 
 functions:
   mediciPatient:
     handler: lambda/custom/index.handler
     events:
       - alexaSkill: amzn1.ask.skill.611b5779-0ece-4f49-9329-13033a19664e
+      - http:
+          path: lambda/custom
+          method: get
 
   hello:
     handler: lambda/custom/hello.hello
@@ -65,7 +68,9 @@ resources:
         TableName: dynamodb-starter
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: movieTitle
             AttributeType: S
         KeySchema:
           - AttributeName: userId
